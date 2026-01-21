@@ -56,14 +56,23 @@ Apply tax based on the item `type`:
 - *Default*: 10% tax for any other type
 
 ### 4. Output
-Print a summary to the console (stdout) in the following format:
+Display the results in a user-friendly table using `cli-table3` and `chalk`.
 
+**Example Output (approximate):**
 ```text
-Processing complete.
-Total Items: 5
-Total Revenue (USD): $150.25
-Total Tax (USD): $12.50
+┌──────────────────────────────────────────────────┐
+│                   Sales Summary                  │
+├───────────────┬────────────┬─────────────────────┤
+│ Total Items   │ 5          │                     │
+├───────────────┼────────────┼─────────────────────┤
+│ Total Revenue │ $150.25    │ (USD)               │
+├───────────────┼────────────┼─────────────────────┤
+│ Total Tax     │ $12.50     │ (USD)               │
+└───────────────┴────────────┴─────────────────────┘
 ```
+
+(The headers should be styled, e.g., bold or colored).
+
 
 ## Getting Started
 

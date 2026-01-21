@@ -1,0 +1,23 @@
+[
+  {
+    "date": "2024-02-01",
+    "sku": "KEYCAP-SET",
+    "price": 45.00,
+    "currency": "USD",
+    "type": "merchandise"
+  },
+  {
+    "date": "2024-02-02",
+    "sku": "COURSE-PRO",
+    "price": 100.00,
+    "currency": "EUR",
+    "type": "digital"
+  },
+  {
+    "date": "2024-02-03",
+    "sku": "POSTER-ART",
+    "price": 15.00,
+    "currency": "CAD",
+    "type": "merchandise"
+  }
+]

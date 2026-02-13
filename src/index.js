@@ -16,6 +16,24 @@ function main() {
     const salesData = parseFile(filePath);
     const summary = processSales(salesData);
 
+    const itemTable = new Table({
+      head: ['Date', 'SKU', 'Original Price', 'USD Price', 'Type', 'Tax'].map(h => chalk.cyan(h)),
+    });
+
+    for (const item of summary.items) {
+      itemTable.push([
+        item.date,
+        item.sku,
+        `${item.originalPrice.toFixed(2)} ${item.currency}`,
+        `$${item.priceUSD.toFixed(2)}`,
+        item.type,
+        `$${item.tax.toFixed(2)}`,
+      ]);
+    }
+
+    console.log(itemTable.toString());
+    console.log('');
+
     const table = new Table({
       colWidths: [17, 14, 7],
     });

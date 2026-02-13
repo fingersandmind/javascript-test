@@ -12,6 +12,26 @@ const TAX_RATES = {
 
 const DEFAULT_TAX_RATE = 0.10;
 
+function validateSale(sale, index) {
+  const label = sale.sku || `row ${index + 1}`;
+
+  if (!sale.currency) {
+    throw new Error(`Missing currency for ${label}`);
+  }
+  if (sale.price === undefined || sale.price === null || sale.price === '') {
+    throw new Error(`Missing price for ${label}`);
+  }
+  if (typeof sale.price !== 'number' || isNaN(sale.price)) {
+    throw new Error(`Non-numeric price for ${label}`);
+  }
+  if (sale.price < 0) {
+    throw new Error(`Negative price for ${label}`);
+  }
+  if (!sale.type) {
+    throw new Error(`Missing type for ${label}`);
+  }
+}
+
 function convertToUSD(price, currency) {
   const rate = EXCHANGE_RATES[currency];
   if (rate === undefined) {
@@ -27,19 +47,36 @@ function getTaxRate(type) {
 function processSales(salesData) {
   let totalRevenue = 0;
   let totalTax = 0;
+  const items = [];
 
-  for (const sale of salesData) {
+  for (let i = 0; i < salesData.length; i++) {
+    const sale = salesData[i];
+    validateSale(sale, i);
+
     const priceUSD = convertToUSD(sale.price, sale.currency);
     const taxRate = getTaxRate(sale.type);
+    const tax = Math.round(priceUSD * taxRate * 100) / 100;
+
     totalRevenue += priceUSD;
-    totalTax += priceUSD * taxRate;
+    totalTax += tax;
+
+    items.push({
+      date: sale.date,
+      sku: sale.sku,
+      originalPrice: sale.price,
+      currency: sale.currency,
+      type: sale.type,
+      priceUSD: Math.round(priceUSD * 100) / 100,
+      tax,
+    });
   }
 
   return {
     totalItems: salesData.length,
     totalRevenue: Math.round(totalRevenue * 100) / 100,
     totalTax: Math.round(totalTax * 100) / 100,
+    items,
   };
 }
 
-module.exports = { processSales, convertToUSD, getTaxRate, EXCHANGE_RATES, TAX_RATES };
+module.exports = { processSales, convertToUSD, getTaxRate, validateSale, EXCHANGE_RATES, TAX_RATES };

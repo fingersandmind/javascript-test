@@ -1,13 +1,47 @@
 const fs = require('fs');
 const path = require('path');
 
+function parseCSVLine(line) {
+  const fields = [];
+  let current = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+
+    if (inQuotes) {
+      if (ch === '"') {
+        if (i + 1 < line.length && line[i + 1] === '"') {
+          current += '"';
+          i++;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        current += ch;
+      }
+    } else {
+      if (ch === '"') {
+        inQuotes = true;
+      } else if (ch === ',') {
+        fields.push(current.trim());
+        current = '';
+      } else {
+        current += ch;
+      }
+    }
+  }
+  fields.push(current.trim());
+  return fields;
+}
+
 function parseCSV(content) {
   const lines = content.trim().split('\n');
   if (lines.length < 2) {
     throw new Error('CSV file is empty or has no data rows');
   }
 
-  const headers = lines[0].split(',').map(h => h.trim());
+  const headers = parseCSVLine(lines[0]);
   const required = ['date', 'sku', 'price', 'currency', 'type'];
   for (const field of required) {
     if (!headers.includes(field)) {
@@ -16,7 +50,7 @@ function parseCSV(content) {
   }
 
   return lines.slice(1).filter(line => line.trim()).map(line => {
-    const values = line.split(',').map(v => v.trim());
+    const values = parseCSVLine(line);
     const obj = {};
     headers.forEach((header, i) => {
       obj[header] = values[i];
@@ -54,4 +88,4 @@ function parseFile(filePath) {
   }
 }
 
-module.exports = { parseFile, parseCSV, parseJSON };
+module.exports = { parseFile, parseCSV, parseJSON, parseCSVLine };

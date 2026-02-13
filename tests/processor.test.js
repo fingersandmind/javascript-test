@@ -1,4 +1,4 @@
-const { processSales, convertToUSD, getTaxRate } = require('../src/processor');
+const { processSales, convertToUSD, getTaxRate, validateSale } = require('../src/processor');
 
 describe('convertToUSD', () => {
   test('should return same price for USD', () => {
@@ -43,6 +43,7 @@ describe('processSales', () => {
       totalItems: 0,
       totalRevenue: 0.00,
       totalTax: 0.00,
+      items: [],
     });
   });
 
@@ -79,6 +80,74 @@ describe('processSales', () => {
     const result = processSales(data);
     expect(result.totalItems).toBe(5);
     expect(result.totalRevenue).toBe(122.49);
-    expect(result.totalTax).toBe(6.88);
+    expect(result.totalTax).toBe(6.87);
+  });
+
+  test('should throw on negative price', () => {
+    const data = [{ price: -5, currency: 'USD', type: 'clothing', sku: 'BAD' }];
+    expect(() => processSales(data)).toThrow('Negative price for BAD');
+  });
+
+  test('should return items array with per-item details', () => {
+    const data = [
+      { date: '2024-01-15', sku: 'SHIRT', price: 20, currency: 'USD', type: 'clothing' },
+      { date: '2024-01-16', sku: 'MUG', price: 10, currency: 'EUR', type: 'merchandise' },
+    ];
+    const result = processSales(data);
+    expect(result.items).toHaveLength(2);
+    expect(result.items[0]).toEqual({
+      date: '2024-01-15',
+      sku: 'SHIRT',
+      originalPrice: 20,
+      currency: 'USD',
+      type: 'clothing',
+      priceUSD: 20,
+      tax: 1,
+    });
+    expect(result.items[1]).toEqual({
+      date: '2024-01-16',
+      sku: 'MUG',
+      originalPrice: 10,
+      currency: 'EUR',
+      type: 'merchandise',
+      priceUSD: 11,
+      tax: 1.65,
+    });
+  });
+});
+
+describe('validateSale', () => {
+  const validSale = { price: 10, currency: 'USD', type: 'clothing', sku: 'A' };
+
+  test('should throw on missing currency', () => {
+    expect(() => validateSale({ ...validSale, currency: '' }, 0)).toThrow('Missing currency');
+  });
+
+  test('should throw on missing price', () => {
+    expect(() => validateSale({ ...validSale, price: undefined }, 0)).toThrow('Missing price');
+  });
+
+  test('should throw on negative price', () => {
+    expect(() => validateSale({ ...validSale, price: -1 }, 0)).toThrow('Negative price');
+  });
+
+  test('should throw on non-numeric price', () => {
+    expect(() => validateSale({ ...validSale, price: 'abc' }, 0)).toThrow('Non-numeric price');
+  });
+
+  test('should throw on NaN price', () => {
+    expect(() => validateSale({ ...validSale, price: NaN }, 0)).toThrow('Non-numeric price');
+  });
+
+  test('should throw on missing type', () => {
+    expect(() => validateSale({ ...validSale, type: '' }, 0)).toThrow('Missing type');
+  });
+
+  test('should use row index as fallback label when sku is missing', () => {
+    expect(() => validateSale({ price: -1, currency: 'USD', type: 'clothing' }, 2)).toThrow('row 3');
+  });
+
+  test('should pass for a valid sale', () => {
+    expect(() => validateSale(validSale, 0)).not.toThrow();
   });
 });

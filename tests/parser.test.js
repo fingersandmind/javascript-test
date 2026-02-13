@@ -1,5 +1,27 @@
 const path = require('path');
-const { parseFile, parseCSV, parseJSON } = require('../src/parser');
+const { parseFile, parseCSV, parseJSON, parseCSVLine } = require('../src/parser');
+
+describe('parseCSVLine', () => {
+  test('should split a simple line on commas', () => {
+    expect(parseCSVLine('a,b,c')).toEqual(['a', 'b', 'c']);
+  });
+
+  test('should handle a quoted field containing a comma', () => {
+    expect(parseCSVLine('a,"b,c",d')).toEqual(['a', 'b,c', 'd']);
+  });
+
+  test('should handle escaped quotes inside a quoted field', () => {
+    expect(parseCSVLine('a,"he said ""hi""",b')).toEqual(['a', 'he said "hi"', 'b']);
+  });
+
+  test('should handle an empty quoted field', () => {
+    expect(parseCSVLine('a,"",b')).toEqual(['a', '', 'b']);
+  });
+
+  test('should trim whitespace around fields', () => {
+    expect(parseCSVLine('  a , b , c  ')).toEqual(['a', 'b', 'c']);
+  });
+});
 
 describe('parseCSV', () => {
   test('should parse valid CSV content', () => {
@@ -31,6 +53,15 @@ describe('parseCSV', () => {
     const csv = `date,sku,price,currency,type
 2024-01-15,TSHIRT,abc,USD,clothing`;
     expect(() => parseCSV(csv)).toThrow('Invalid price');
+  });
+
+  test('should handle quoted fields in CSV rows', () => {
+    const csv = `date,sku,price,currency,type
+2024-01-15,"SHIRT,BLUE",20.00,USD,clothing`;
+    const result = parseCSV(csv);
+    expect(result).toHaveLength(1);
+    expect(result[0].sku).toBe('SHIRT,BLUE');
+    expect(result[0].price).toBe(20);
   });
 });
 

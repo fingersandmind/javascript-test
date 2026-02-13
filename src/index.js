@@ -13,26 +13,23 @@ function main() {
   const filePath = args[0];
 
   try {
-    // 1. Parse File
     const salesData = parseFile(filePath);
-
-    // 2. Process Data
     const summary = processSales(salesData);
 
-    // 3. Output Results
     const table = new Table({
-      head: ['Total Items', 'Total Revenue (USD)', 'Total Tax (USD)'],
-      colWidths: [20, 20, 20]
+      colWidths: [17, 14, 7],
     });
-    table.push([
-      summary.totalItems,
-      `$${summary.totalRevenue.toFixed(2)}`,
-      `$${summary.totalTax.toFixed(2)}`
-    ]);
-    console.log(table.toString());
 
+    table.push(
+      [{ colSpan: 3, content: chalk.bold.cyan('Sales Summary'), hAlign: 'center' }],
+      [chalk.bold('Total Items'), summary.totalItems, ''],
+      [chalk.bold('Total Revenue'), `$${summary.totalRevenue.toFixed(2)}`, chalk.gray('(USD)')],
+      [chalk.bold('Total Tax'), `$${summary.totalTax.toFixed(2)}`, chalk.gray('(USD)')]
+    );
+
+    console.log(table.toString());
   } catch (err) {
-    console.error('Error:', err.message);
+    console.error(chalk.red('Error:'), err.message);
     process.exit(1);
   }
 }
